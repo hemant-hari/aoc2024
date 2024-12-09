@@ -3,80 +3,188 @@ using System.Collections.Immutable;
 using System.Net.WebSockets;
 using System.Text.RegularExpressions;
 
-var input = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day4.txt");
+var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day6.txt");
 
+var testText = @"....#.....
+.........#
+..........
+..#.......
+.......#..
+..........
+.#..^.....
+........#.
+#.........
+......#...".Split("\r\n");
 
-var testInput = @"....XXMAS.
-.SAMXMS...
-...S..A...
-..A.A.MS.X
-XMASAMX.MM
-X.....XA.A
-S.S.S.S.SS
-.A.A.A.A.A
-..M.M.M.MM
-.X.X.XMASX".Split("\r\n");
+string[] input = text!;
 
-Day4a(input);
+TraverseWithLoopDetection(input.Select(x => x.ToArray()).ToArray());
 
-static void Day4a(string[] input)
+static void Day6a(string[] input)
 {
-    Regex reForward = new Regex("XMAS");
-    Regex reBackward = new Regex("SAMX");
+    var positions = input.Select(x => x.ToArray()).ToArray();
 
-    var horizontal = input;
-    var vertical = GetVertical();
-    var diagonal1 = GetDiagonals(input);
-    var diagonal2 = GetDiagonals(input.Reverse().ToArray());
+    var height = input.Length;
+    var width = input[0].Length;
 
-    var result = input.Concat(vertical)
-        .Concat(diagonal1)
-        .Concat(diagonal2)
-        .Select(x =>
-        {
-            return reForward.Matches(x).Count + reBackward.Matches(x).Count;
-        })
-        .Sum();
+    var pos = GetInitialPos();
+    var direction = "up";
 
-    Console.WriteLine(result);
+    bool InBounds() =>
+        pos.y < height && pos.y >= 0
+           && pos.x < width && pos.x >= 0;
 
-    IEnumerable<string> GetVertical()
+    while (InBounds())
     {
-        for (int i = 0; i < input[0].Length; i++)
+        var nextBlock = NextBlock();
+
+        // rotate
+        if (nextBlock == '#')
         {
-            yield return new string(input.Select(x => x[i]).ToArray());
+            direction = direction switch
+            {
+                "up" => "right",
+                "right" => "down",
+                "down" => "left",
+                "left" => "up",
+                _ => null
+            };
         }
+
+        //mark as visited
+        positions[pos.y][pos.x] = 'X';
+
+        // move
+        pos = direction switch
+        {
+            "up" => (pos.y - 1, pos.x),
+            "right" => (pos.y, pos.x + 1),
+            "down" => (pos.y + 1, pos.x),
+            "left" => (pos.y, pos.x - 1),
+            _ => throw new Exception()
+        };
     }
 
-    IEnumerable<string> GetDiagonals(string[] input)
+    Console.WriteLine(positions.SelectMany(x => x).Count(x => x == 'X'));
+
+    char NextBlock()
     {
-        for (int i = 0; i < input.Length; i++)
+        var (y, x) = pos;
+        switch (direction)
         {
-            List<char> diagonal = new();
-            for(int j = 0; j < Math.Min(i+1, Math.Min(input.Length, input[0].Length)); j++)
-            {
-                diagonal.Add(input[i-j][j]);
-            }
-
-            yield return new string(diagonal.ToArray());
+            case "up" when y > 0:
+                y--;
+                break;
+            case "right" when x < width - 1:
+                x++;
+                break;
+            case "down" when y < height - 1:
+                y++;
+                break;
+            case "left" when x > 0:
+                x--;
+                break;
+            default:
+                return '.';
         }
 
-        for (int i = 0; i < input[0].Length - 1; i++)
-        {
-            List<char> diagonal = new();
-            for(int j = 0; j < Math.Min(i+1, Math.Min(input.Length, input[0].Length)); j++)
-            {
-                diagonal.Add(input[^(i-j + 1)][^(j + 1)]);
-            }
+        return input[y][x];
+    }
 
-            yield return new string(diagonal.ToArray());
-        }
+    (int y, int x) GetInitialPos()
+    {
+        var (y, match) = input.Index().First(x => x.Item.IndexOf('^') != -1);
+        var x = match.IndexOf('^');
+        return (y, x);
     }
 }
 
-#region completed
+static bool TraverseWithLoopDetection(char[][] input)
+{
+    var positions = input.Select(x => x.ToArray()).ToArray();
 
-static void Day1a(string[] lines)
+    var height = input.Length;
+    var width = input[0].Length;
+
+    var pos = GetInitialPos();
+    var direction = 'u';
+
+    bool InBounds() =>
+        pos.y < height && pos.y >= 0
+           && pos.x < width && pos.x >= 0;
+
+    while (InBounds())
+    {
+
+        var nextBlock = NextBlock();
+
+        // rotate
+        if (nextBlock == '#')
+        {
+            direction = direction switch
+            {
+                'u' => 'r',
+                'r' => 'd',
+                'd' => 'l',
+                'l' => 'u',
+                _ => '0'
+            };
+        }
+
+        //mark as visited
+        positions[pos.y][pos.x] = direction;
+
+        // move
+        pos = direction switch
+        {
+            'u' => (pos.y - 1, pos.x),
+            'r' => (pos.y, pos.x + 1),
+            'd' => (pos.y + 1, pos.x),
+            'l' => (pos.y, pos.x - 1),
+            _ => throw new Exception()
+        };
+    }
+
+    Console.WriteLine(positions.SelectMany(x => x).Count(x => x is 'u' or 'r' or 'd' or 'l'));
+
+    return true;
+
+    char NextBlock()
+    {
+        var (y, x) = pos;
+        switch (direction)
+        {
+            case 'u' when y > 0:
+                y--;
+                break;
+            case 'r' when x < width - 1:
+                x++;
+                break;
+            case 'd' when y < height - 1:
+                y++;
+                break;
+            case 'l' when x > 0:
+                x--;
+                break;
+            default:
+                return '.';
+        }
+
+        return input[y][x];
+    }
+
+    (int y, int x) GetInitialPos()
+    {
+        var (y, match) = input.Index().First(x => x.Item.Contains('^'));
+        var x = match.ToList().IndexOf('^');
+        return (y, x);
+    }
+}
+
+
+    #region completed
+
+    static void Day1a(string[] lines)
 {
     var items = lines.Select(l => l.Split(" ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
 
@@ -207,5 +315,141 @@ static void Day3b(string input)
 
     Console.WriteLine(result);
 }
+
+static void Day4b(string[] input)
+{
+    int count = 0;
+
+    for (int i = 1; i < input.Length - 1; i++)
+    {
+        for (int j = 1; j < input[i].Length - 1; j++)
+        {
+            char topLeft = input[i - 1][j - 1];
+            char topRight = input[i - 1][j + 1];
+            char bottomLeft = input[i + 1][j - 1];
+            char bottomRight = input[i + 1][j + 1];
+
+            if (input[i][j] == 'A')
+            {
+                if ((topLeft == 'S' && bottomRight == 'M') || (topLeft == 'M' && bottomRight == 'S'))
+                {
+                    if ((topRight == 'S' && bottomLeft == 'M') || (topRight == 'M' && bottomLeft == 'S'))
+                    {
+                        count++;
+                    }
+                }
+            }
+        }
+    }
+
+    Console.WriteLine(count);
+}
+
+static void Day4a(string[] input)
+{
+    Regex reForward = new Regex("XMAS");
+    Regex reBackward = new Regex("SAMX");
+
+    var horizontal = input;
+    var vertical = GetVertical();
+    var diagonal1 = GetDiagonals(input);
+    var diagonal2 = GetDiagonals(input.Reverse().ToArray());
+
+    var result = input.Concat(vertical)
+        .Concat(diagonal1)
+        .Concat(diagonal2)
+        .Select(x =>
+        {
+            return reForward.Matches(x).Count + reBackward.Matches(x).Count;
+        })
+        .Sum();
+
+    Console.WriteLine(result);
+
+    IEnumerable<string> GetVertical()
+    {
+        for (int i = 0; i < input[0].Length; i++)
+        {
+            yield return new string(input.Select(x => x[i]).ToArray());
+        }
+    }
+
+    IEnumerable<string> GetDiagonals(string[] input)
+    {
+        for (int i = 0; i < input.Length; i++)
+        {
+            List<char> diagonal = new();
+            for (int j = 0; j < Math.Min(i + 1, Math.Min(input.Length, input[0].Length)); j++)
+            {
+                diagonal.Add(input[i - j][j]);
+            }
+
+            yield return new string(diagonal.ToArray());
+        }
+
+        for (int i = 0; i < input[0].Length - 1; i++)
+        {
+            List<char> diagonal = new();
+            for (int j = 0; j < Math.Min(i + 1, Math.Min(input.Length, input[0].Length)); j++)
+            {
+                diagonal.Add(input[^(i - j + 1)][^(j + 1)]);
+            }
+
+            yield return new string(diagonal.ToArray());
+        }
+    }
+}
+
+static void Day5(string text)
+{
+    var orderAndPages = text.Split("\n\n");
+
+    Dictionary<int, HashSet<int>> orderingGraphForward =
+        orderAndPages[0]
+            .Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => x.Split("|"))
+            .GroupBy(x => int.Parse(x[0]))
+            .ToDictionary(x => x.Key, x => x.Select(x => int.Parse(x[1])).ToHashSet());
+
+    Dictionary<int, HashSet<int>> orderingGraphBackward =
+        orderAndPages[0]
+            .Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => x.Split("|"))
+            .GroupBy(x => int.Parse(x[1]))
+            .ToDictionary(x => x.Key, x => x.Select(x => int.Parse(x[0])).ToHashSet());
+
+    IEnumerable<int[]> pages =
+        orderAndPages[1]
+            .Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => x.Split(",").Select(int.Parse).ToArray());
+
+    var fixedPages = pages.Where(x => GetMiddlePage(x) == 0)
+        .Select(x => x.Order(new PageCompararer(orderingGraphForward, orderingGraphBackward)).ToArray())
+        .Select(GetMiddlePage)
+        .Sum();
+
+    Console.WriteLine(pages.Select(GetMiddlePage).Sum());
+    Console.WriteLine(fixedPages);
+
+    int GetMiddlePage(int[] pages)
+    {
+        for (int i = pages.Length - 1; i >= 0; i--)
+        {
+            var page = pages[i];
+            if (!orderingGraphForward.TryGetValue(page, out var forwardItems))
+            {
+                continue;
+            }
+
+            if (pages[0..i].Any(forwardItems.Contains))
+            {
+                return 0;
+            }
+        }
+
+        return pages[pages.Length / 2];
+    }
+}
+
 
 #endregion
