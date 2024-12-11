@@ -1,23 +1,15 @@
-﻿// See https://aka.ms/new-console-template for more information
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Net.WebSockets;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Collections.Immutable;
+using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using Pos = (int x, int y);
 
-var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day10.txt");
+var text = File.ReadAllText(@"C:\Users\Hemant Hari\source\repos\aoc2024\day11.txt");
 
-var testText = @"89010123
-78121874
-87430965
-96549874
-45678903
-32019012
-01329801
-10456732".Split("\r\n");
+var testText = @"0 1 10 99 999";
+testText = @"125 17";
+testText = @"5910927 0 1 47 261223 94788 545 7771";
 
-var input = text.Select(x => x.Select(char.GetNumericValue).ToArray()).ToArray();
+var input = testText.Split(" ").Select(long.Parse);
 
 
 #region completed
@@ -883,5 +875,92 @@ static void Day10(double[][] input)
             && pos.x < input[0].Length
             && pos.y < input.Length;
     }
+}
+
+void Day11a(IEnumerable<long> initial, int iters)
+{
+    var stones = new LinkedList<long>(initial);
+    for (var i = 0; i < iters; i++)
+    {
+        for (var item = stones.First; item != null; item = item.Next)
+        {
+            ref var itemVal = ref item.ValueRef;
+            if(itemVal == 0)
+            {
+                itemVal = 1;
+                continue;
+            }
+
+            var numDigits = NumDigits(itemVal);
+            if (numDigits % 2 == 0)
+            {
+                var halfLen = numDigits / 2;
+                var halfMultiplier = Math.Pow(10, halfLen);
+                var first = Math.Floor(itemVal / halfMultiplier);
+                var second = itemVal - first * halfMultiplier;
+
+                itemVal = (long)second;
+                stones.AddBefore(item, (long)first);
+                continue;
+            }
+
+            itemVal = itemVal * 2024;
+        }
+
+        Console.WriteLine(i);
+    }
+
+    Console.WriteLine(stones.Count);
+}
+
+void Day11b(IEnumerable<long> initial, int iters)
+{
+    var cache = new Dictionary<(long num, int iters), long>();
+
+    Console.WriteLine(initial.Select(x => NumStones((x, iters))).Sum());
+    
+    long NumStones((long num, int iters) item)
+    {
+        var (num, iters) = item;
+        if (cache.TryGetValue(item, out var numStones))
+        {
+            return numStones;
+        }
+
+        if (iters == 0)
+        {
+            return 1;
+        }
+
+        if (num == 0)
+        {
+            var zeroVal = NumStones((1, iters - 1));
+            cache[item] = zeroVal;
+            return zeroVal;
+        }
+
+        var numDigits = NumDigits(num);
+        if (numDigits % 2 == 0)
+        {
+            var halfLen = numDigits / 2;
+            var halfMultiplier = Math.Pow(10, halfLen);
+            var first = (long)Math.Floor(num / halfMultiplier);
+            var second = (long)(num - first * halfMultiplier);
+
+            var evenNumDigitsVal = NumStones((first, iters - 1)) + NumStones((second, iters - 1));
+            cache[item] = evenNumDigitsVal;
+
+            return evenNumDigitsVal;
+        }
+
+        var result = NumStones((num * 2024, iters - 1));
+        cache.Add(item, result);
+        return result;
+    }
+}
+
+int NumDigits(long n)
+{
+    return (int)Math.Floor(Math.Log10(n) + 1);
 }
 #endregion
