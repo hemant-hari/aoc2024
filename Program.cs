@@ -3,14 +3,191 @@ using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using Pos = (int x, int y);
 
-var text = File.ReadAllText(@"C:\Users\Hemant Hari\source\repos\aoc2024\day11.txt");
+var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day12.txt");
 
-var testText = @"0 1 10 99 999";
-testText = @"125 17";
-testText = @"5910927 0 1 47 261223 94788 545 7771";
+var testText =
+@"RRRRIICCFF
+RRRRIICCCF
+VVRRRCCFFF
+VVRCCCJFFF
+VVVVCJJCFE
+VVIVCCJJEE
+VVIIICJJEE
+MIIIIIJJEE
+MIIISIJEEE
+MMMISSJEEE".Split("\n").Select(x => x.Trim()).ToArray();
 
-var input = testText.Split(" ").Select(long.Parse);
+//testText = @"RRR".Split("\n").Select(x => x.Trim()).ToArray();
 
+var input = text;
+
+Console.WriteLine(Day12b(input));
+
+long Day12b(string[] input)
+{
+    var map = input
+        .SelectMany((row, i) => row.Select((c, j) => (c, j, i)))
+        .ToDictionary(k => (k.i, k.j), v => v.c);
+    var result = 0;
+    HashSet<(int, int)> visited = [];
+    for (int i = 0; i < input.Length; i++)
+    {
+        for (int j = 0; j < input[i].Length; j++)
+        {
+            if (visited.Contains((i, j)))
+            {
+                continue;
+            }
+
+            result += CalculatePrice(i, j);
+        }
+    }
+
+    int CalculatePrice(int i, int j)
+    {
+        HashSet<(int i, int j)> area = [];
+        var type = map[(i, j)];
+
+        bool TraverseArea(int i, int j)
+        {
+            if (!map.TryGetValue((i, j), out var curr) || curr != type)
+            {
+                return false;
+            }
+
+            if (area.Contains((i, j)))
+            {
+                return true;
+            }
+
+            area.Add((i, j));
+
+            TraverseArea(i, j + 1);
+            TraverseArea(i, j - 1);
+            TraverseArea(i + 1, j);
+            TraverseArea(i - 1, j);
+
+            return true;
+        }
+
+        TraverseArea(i, j);
+        visited.UnionWith(area);
+
+        var sides = NumSides();
+        
+        int NumSides()
+        {
+            var numSides = 0;
+            for (int i = 0; i < input.Length; i++)
+            {
+                var onEdge = false;
+                for (int j = 0; j < input[i].Length; j++)
+                {
+                    if(!area.Contains((i, j)))
+                    {
+                        onEdge = false;
+                        continue;
+                    }
+
+                    if(!map.TryGetValue((i-1, j), out var curr) || curr != type)
+                    {
+                        if (!onEdge)
+                        {
+                            numSides++;
+                        }
+
+                        onEdge = true;
+                    }
+                    else
+                    {
+                        onEdge = false;
+                    }
+                }
+
+                onEdge = false;
+                for (int j = 0; j < input[i].Length; j++)
+                {
+                    if(!area.Contains((i, j)))
+                    {
+                        onEdge = false;
+                        continue;
+                    }
+
+                    if(!map.TryGetValue((i+1, j), out var curr) || curr != type)
+                    {
+                        if (!onEdge)
+                        {
+                            numSides++;
+                        }
+
+                        onEdge = true;
+                    }
+                    else
+                    {
+                        onEdge = false;
+                    }
+                }
+            }
+
+            for (int j = 0; j < input[0].Length; j++)
+            {
+                var onEdge = false;
+                for (int i = 0; i < input.Length; i++)
+                {
+                    if(!area.Contains((i, j)))
+                    {
+                        onEdge = false;
+                        continue;
+                    }
+
+                    if(!map.TryGetValue((i, j-1), out var curr) || curr != type)
+                    {
+                        if (!onEdge)
+                        {
+                            numSides++;
+                        }
+
+                        onEdge = true;
+                    }
+                    else
+                    {
+                        onEdge = false;
+                    }
+                }
+
+                onEdge = false;
+                for (int i = 0; i < input.Length; i++)
+                {
+                    if(!area.Contains((i, j)))
+                    {
+                        onEdge = false;
+                        continue;
+                    }
+
+                    if(!map.TryGetValue((i, j+1), out var curr) || curr != type)
+                    {
+                        if (!onEdge)
+                        {
+                            numSides++;
+                        }
+
+                        onEdge = true;
+                    }
+                    else
+                    {
+                        onEdge = false;
+                    }
+                }
+            }
+
+            return numSides;
+        }
+
+        return area.Count * sides;
+    }
+
+    return result;
+}
 
 #region completed
 
@@ -208,7 +385,7 @@ static void Day4a(string[] input)
     {
         for (int i = 0; i < input.Length; i++)
         {
-            List<char> diagonal = new();
+            List<char> diagonal = [];
             for (int j = 0; j < Math.Min(i + 1, Math.Min(input.Length, input[0].Length)); j++)
             {
                 diagonal.Add(input[i - j][j]);
@@ -219,7 +396,7 @@ static void Day4a(string[] input)
 
         for (int i = 0; i < input[0].Length - 1; i++)
         {
-            List<char> diagonal = new();
+            List<char> diagonal = [];
             for (int j = 0; j < Math.Min(i + 1, Math.Min(input.Length, input[0].Length)); j++)
             {
                 diagonal.Add(input[^(i - j + 1)][^(j + 1)]);
@@ -963,4 +1140,62 @@ int NumDigits(long n)
 {
     return (int)Math.Floor(Math.Log10(n) + 1);
 }
+
+long Day12a(string[] input)
+{
+    var map = input
+        .SelectMany((row, i) => row.Select((c, j) => (c, j, i)))
+        .ToDictionary(k => (k.i, k.j), v => v.c);
+    var result = 0;
+    HashSet<(int, int)> visited = [];
+    for (int i = 0; i < input.Length; i++)
+    {
+        for (int j = 0; j < input[i].Length; j++)
+        {
+            if (visited.Contains((i, j)))
+            {
+                continue;
+            }
+
+            result += CalculatePrice(i, j);
+        }
+    }
+
+    int CalculatePrice(int i, int j)
+    {
+        HashSet<(int, int)> area = [];
+        HashSet<(decimal, decimal)> neighbour = [];
+        var type = map[(i, j)];
+
+        bool GetPerimeter(int i, int j)
+        {
+            if (!map.TryGetValue((i, j), out var curr) || curr != type)
+            {
+                return false;
+            }
+
+            if (area.Contains((i, j)))
+            {
+                return true;
+            }
+
+            area.Add((i, j));
+
+            if(GetPerimeter(i, j + 1)) neighbour.Add((i, j + 0.5m));
+            if(GetPerimeter(i, j - 1)) neighbour.Add((i, j - 0.5m));
+            if(GetPerimeter(i + 1, j)) neighbour.Add((i + 0.5m, j));
+            if(GetPerimeter(i - 1, j)) neighbour.Add((i - 0.5m, j));
+
+            return true;
+        }
+
+        GetPerimeter(i, j);
+        visited.UnionWith(area);
+        var perimeter = (area.Count * 4 - neighbour.Count * 2);
+        return area.Count * perimeter;
+    }
+
+    return result;
+}
+
 #endregion
