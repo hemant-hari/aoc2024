@@ -1,193 +1,28 @@
-﻿using System.Collections.Immutable;
-using System.Net.Http.Headers;
+﻿using FastConsole;
+using System.Collections.Immutable;
+using System.Drawing;
 using System.Text.RegularExpressions;
 using Pos = (int x, int y);
 
-var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day12.txt");
+FConsole.Initialize("test");
+var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day14.txt");
 
 var testText =
-@"RRRRIICCFF
-RRRRIICCCF
-VVRRRCCFFF
-VVRCCCJFFF
-VVVVCJJCFE
-VVIVCCJJEE
-VVIIICJJEE
-MIIIIIJJEE
-MIIISIJEEE
-MMMISSJEEE".Split("\n").Select(x => x.Trim()).ToArray();
-
-//testText = @"RRR".Split("\n").Select(x => x.Trim()).ToArray();
+@"p=0,4 v=3,-3
+p=6,3 v=-1,-3
+p=10,3 v=-1,2
+p=2,0 v=2,-1
+p=0,0 v=1,3
+p=3,0 v=-2,-2
+p=7,6 v=-1,-3
+p=3,0 v=-1,-2
+p=9,3 v=2,3
+p=7,3 v=-1,2
+p=2,4 v=2,-3
+p=9,5 v=-3,-3".Split("\r\n");
 
 var input = text;
 
-Console.WriteLine(Day12b(input));
-
-long Day12b(string[] input)
-{
-    var map = input
-        .SelectMany((row, i) => row.Select((c, j) => (c, j, i)))
-        .ToDictionary(k => (k.i, k.j), v => v.c);
-    var result = 0;
-    HashSet<(int, int)> visited = [];
-    for (int i = 0; i < input.Length; i++)
-    {
-        for (int j = 0; j < input[i].Length; j++)
-        {
-            if (visited.Contains((i, j)))
-            {
-                continue;
-            }
-
-            result += CalculatePrice(i, j);
-        }
-    }
-
-    int CalculatePrice(int i, int j)
-    {
-        HashSet<(int i, int j)> area = [];
-        var type = map[(i, j)];
-
-        bool TraverseArea(int i, int j)
-        {
-            if (!map.TryGetValue((i, j), out var curr) || curr != type)
-            {
-                return false;
-            }
-
-            if (area.Contains((i, j)))
-            {
-                return true;
-            }
-
-            area.Add((i, j));
-
-            TraverseArea(i, j + 1);
-            TraverseArea(i, j - 1);
-            TraverseArea(i + 1, j);
-            TraverseArea(i - 1, j);
-
-            return true;
-        }
-
-        TraverseArea(i, j);
-        visited.UnionWith(area);
-
-        var sides = NumSides();
-        
-        int NumSides()
-        {
-            var numSides = 0;
-            for (int i = 0; i < input.Length; i++)
-            {
-                var onEdge = false;
-                for (int j = 0; j < input[i].Length; j++)
-                {
-                    if(!area.Contains((i, j)))
-                    {
-                        onEdge = false;
-                        continue;
-                    }
-
-                    if(!map.TryGetValue((i-1, j), out var curr) || curr != type)
-                    {
-                        if (!onEdge)
-                        {
-                            numSides++;
-                        }
-
-                        onEdge = true;
-                    }
-                    else
-                    {
-                        onEdge = false;
-                    }
-                }
-
-                onEdge = false;
-                for (int j = 0; j < input[i].Length; j++)
-                {
-                    if(!area.Contains((i, j)))
-                    {
-                        onEdge = false;
-                        continue;
-                    }
-
-                    if(!map.TryGetValue((i+1, j), out var curr) || curr != type)
-                    {
-                        if (!onEdge)
-                        {
-                            numSides++;
-                        }
-
-                        onEdge = true;
-                    }
-                    else
-                    {
-                        onEdge = false;
-                    }
-                }
-            }
-
-            for (int j = 0; j < input[0].Length; j++)
-            {
-                var onEdge = false;
-                for (int i = 0; i < input.Length; i++)
-                {
-                    if(!area.Contains((i, j)))
-                    {
-                        onEdge = false;
-                        continue;
-                    }
-
-                    if(!map.TryGetValue((i, j-1), out var curr) || curr != type)
-                    {
-                        if (!onEdge)
-                        {
-                            numSides++;
-                        }
-
-                        onEdge = true;
-                    }
-                    else
-                    {
-                        onEdge = false;
-                    }
-                }
-
-                onEdge = false;
-                for (int i = 0; i < input.Length; i++)
-                {
-                    if(!area.Contains((i, j)))
-                    {
-                        onEdge = false;
-                        continue;
-                    }
-
-                    if(!map.TryGetValue((i, j+1), out var curr) || curr != type)
-                    {
-                        if (!onEdge)
-                        {
-                            numSides++;
-                        }
-
-                        onEdge = true;
-                    }
-                    else
-                    {
-                        onEdge = false;
-                    }
-                }
-            }
-
-            return numSides;
-        }
-
-        return area.Count * sides;
-    }
-
-    return result;
-}
 
 #region completed
 
@@ -1198,4 +1033,326 @@ long Day12a(string[] input)
     return result;
 }
 
+
+long Day12b(string[] input)
+{
+    var map = input
+        .SelectMany((row, i) => row.Select((c, j) => (c, j, i)))
+        .ToDictionary(k => (k.i, k.j), v => v.c);
+    var result = 0;
+    HashSet<(int, int)> visited = [];
+    for (int i = 0; i < input.Length; i++)
+    {
+        for (int j = 0; j < input[i].Length; j++)
+        {
+            if (visited.Contains((i, j)))
+            {
+                continue;
+            }
+
+            result += CalculatePrice(i, j);
+        }
+    }
+
+    int CalculatePrice(int i, int j)
+    {
+        HashSet<(int i, int j)> area = [];
+        var type = map[(i, j)];
+
+        bool TraverseArea(int i, int j)
+        {
+            if (!map.TryGetValue((i, j), out var curr) || curr != type)
+            {
+                return false;
+            }
+
+            if (area.Contains((i, j)))
+            {
+                return true;
+            }
+
+            area.Add((i, j));
+
+            TraverseArea(i, j + 1);
+            TraverseArea(i, j - 1);
+            TraverseArea(i + 1, j);
+            TraverseArea(i - 1, j);
+
+            return true;
+        }
+
+        TraverseArea(i, j);
+        visited.UnionWith(area);
+
+        var sides = NumSides();
+        
+        int NumSides()
+        {
+            var numSides = 0;
+            for (int i = 0; i < input.Length; i++)
+            {
+                var onEdge = false;
+                for (int j = 0; j < input[i].Length; j++)
+                {
+                    if(!area.Contains((i, j)))
+                    {
+                        onEdge = false;
+                        continue;
+                    }
+
+                    if(!map.TryGetValue((i-1, j), out var curr) || curr != type)
+                    {
+                        if (!onEdge)
+                        {
+                            numSides++;
+                        }
+
+                        onEdge = true;
+                    }
+                    else
+                    {
+                        onEdge = false;
+                    }
+                }
+
+                onEdge = false;
+                for (int j = 0; j < input[i].Length; j++)
+                {
+                    if(!area.Contains((i, j)))
+                    {
+                        onEdge = false;
+                        continue;
+                    }
+
+                    if(!map.TryGetValue((i+1, j), out var curr) || curr != type)
+                    {
+                        if (!onEdge)
+                        {
+                            numSides++;
+                        }
+
+                        onEdge = true;
+                    }
+                    else
+                    {
+                        onEdge = false;
+                    }
+                }
+            }
+
+            for (int j = 0; j < input[0].Length; j++)
+            {
+                var onEdge = false;
+                for (int i = 0; i < input.Length; i++)
+                {
+                    if(!area.Contains((i, j)))
+                    {
+                        onEdge = false;
+                        continue;
+                    }
+
+                    if(!map.TryGetValue((i, j-1), out var curr) || curr != type)
+                    {
+                        if (!onEdge)
+                        {
+                            numSides++;
+                        }
+
+                        onEdge = true;
+                    }
+                    else
+                    {
+                        onEdge = false;
+                    }
+                }
+
+                onEdge = false;
+                for (int i = 0; i < input.Length; i++)
+                {
+                    if(!area.Contains((i, j)))
+                    {
+                        onEdge = false;
+                        continue;
+                    }
+
+                    if(!map.TryGetValue((i, j+1), out var curr) || curr != type)
+                    {
+                        if (!onEdge)
+                        {
+                            numSides++;
+                        }
+
+                        onEdge = true;
+                    }
+                    else
+                    {
+                        onEdge = false;
+                    }
+                }
+            }
+
+            return numSides;
+        }
+
+        return area.Count * sides;
+    }
+
+    return result;
+}
+
+const int aCost = 1;
+const int bCost = 3;
+
+int Day13a(string[] input)
+{
+    Regex re = new(@"Button A: X\+(\d*), Y\+(\d*)\nButton B: X\+(\d*), Y\+(\d*)\nPrize: X=(\d*), Y=(\d*)");
+
+    return input.Select(ProcessGame).Sum();
+
+    int ProcessGame(string game)
+    {
+        var match = re.Match(game);
+        var g = (int x) => int.Parse(match.Groups[x].Value);
+        var a = (x: g(1), y: g(2));
+        var b = (x: g(3), y: g(4));
+        var prize = (x: g(5), y: g(6));
+
+        for (int i = 0; i < 10000; i++)
+        {
+            var (x, y) = (prize.x - b.x*i, prize.y - b.y*i);
+            var numUntilTarget = NumUntilTarget(a, (x, y));
+            if (numUntilTarget != null)
+            {
+                var cost = (bCost * numUntilTarget.Value) + (aCost * i);
+                return cost;
+            }
+        }
+
+        return 0;
+    }
+
+    int? NumUntilTarget((int x, int y) button, (int x, int y) target)
+    {
+        var i = 0;
+        while (true)
+        {
+            if (button.x * i > target.x || button.y > target.y)
+            {
+                return null;
+            }
+
+            if (button.x * i == target.x && button.y * i == target.y)
+            {
+                return i;
+            }
+
+            i++;
+        }
+    }
+}
+
+decimal Day13b(string[] input)
+{
+    Regex re = new(@"Button A: X\+(\d*), Y\+(\d*)\nButton B: X\+(\d*), Y\+(\d*)\nPrize: X=(\d*), Y=(\d*)");
+
+    return input.Select(ProcessGame).Sum();
+
+    decimal ProcessGame(string game, int index)
+    {
+        var match = re.Match(game);
+        var g = (int x) => long.Parse(match.Groups[x].Value);
+        var a = (x: g(1), y: g(2));
+        var b = (x: g(3), y: g(4));
+        var prize = (x: g(5) + 10000000000000, y: g(6) + 10000000000000);
+
+        decimal bClick = (a.x * prize.y - a.y * prize.x) / (a.x * b.y - b.x * a.y);
+
+        decimal aClick = (prize.x * b.y - prize.y * b.x) / (a.x*b.y - a.y*b.x);
+
+        if (((a.x * aClick) + (b.x * bClick), (a.y * aClick) + (b.y * bClick)) == prize)
+        {
+            return aClick * aCost + bClick * bCost;
+        }
+
+        return 0;
+    }
+}
+
+
+Bot.Size = (x: 11, y: 7);
+Bot.Size = (x: 101, y: 103);
+var size = Bot.Size;
+
+int Day14(string[] input, int s)
+{
+    Regex re = new(@"p=([^,]*),([^,]*) v=([^,]*),([^,]*)");
+
+    var g = (Match match, int x) => int.Parse(match.Groups[x].Value);
+    var bots = input
+        .Select(Bot.Create)
+        .ToArray();
+
+    Debug(0);
+
+    for (int i = 0; i < s; i++)
+    {
+        foreach(var bot in bots)
+        {
+            bot.Move();
+        }
+        Debug(i+1);
+    }
+
+    Console.ReadKey();
+
+    var q1 = bots.Count(b => (b.pos.y < size.y / 2) && (b.pos.x < size.x / 2));
+    var q2 = bots.Count(b => (b.pos.y > size.y / 2) && (b.pos.x < size.x / 2));
+    var q3 = bots.Count(b => (b.pos.y < size.y / 2) && (b.pos.x > size.x / 2));
+    var q4 = bots.Count(b => (b.pos.y > size.y / 2) && (b.pos.x > size.x / 2));
+
+    return q1 * q2 * q3 * q4;
+
+    void Debug(int frame)
+    {
+        var bitMap = new Bitmap(size.x, size.y);
+        for (int i = 0; i < size.y; i++)
+        {
+            for (int j = 0; j < size.x; j++)
+            {
+                var num = bots.Count(x => (x.pos.x, x.pos.y) == (j, i));
+                if (num != 0)
+                {
+                    bitMap.SetPixel(j, i, Color.Green);
+                }
+                else
+                {
+                    bitMap.SetPixel(j, i, Color.Black);
+                }
+            }
+        }
+
+        bitMap.Save($@"C:\Users\Hemant Hari\Desktop\AOC\{frame}.bmp");
+    }
+
+    void DebugConsole()
+    {
+        for (int i = 0; i < size.y; i++)
+        {
+            for (int j = 0; j < size.x; j++)
+            {
+                var num = bots.Count(x => (x.pos.x, x.pos.y) == (j, i));
+                if (num != 0)
+                {
+                    FConsole.SetChar(j, i, num.ToString()[0], ConsoleColor.White, ConsoleColor.Black);
+                }
+                else
+                {
+                    FConsole.SetChar(j, i, '.', ConsoleColor.White, ConsoleColor.Black);
+                }
+            }
+        }
+
+        FConsole.DrawBuffer();
+    }
+}
 #endregion
