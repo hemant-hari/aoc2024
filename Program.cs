@@ -20,7 +20,7 @@ var testText =
 #.....#
 #######
 
-<vv<<^^<<^^^^^".Replace("\r","");
+<vv<<^^<<^^^^^".Replace("\r", "");
 
 var estText =
 @"##########
@@ -43,15 +43,8 @@ vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v
 >^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^
 <><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>
 ^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>
-v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^".Replace("\r","");
+v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^".Replace("\r", "");
 
-var state = WideGameState.Read(text);
-
-//state.Play();
-state.Run();
-state.Draw();
-Console.WriteLine(state.CalcGps());
-Console.ReadKey();
 
 #region completed
 
@@ -926,7 +919,7 @@ void Day11a(IEnumerable<long> initial, int iters)
         for (var item = stones.First; item != null; item = item.Next)
         {
             ref var itemVal = ref item.ValueRef;
-            if(itemVal == 0)
+            if (itemVal == 0)
             {
                 itemVal = 1;
                 continue;
@@ -959,7 +952,7 @@ void Day11b(IEnumerable<long> initial, int iters)
     var cache = new Dictionary<(long num, int iters), long>();
 
     Console.WriteLine(initial.Select(x => NumStones((x, iters))).Sum());
-    
+
     long NumStones((long num, int iters) item)
     {
         var (num, iters) = item;
@@ -1045,10 +1038,10 @@ long Day12a(string[] input)
 
             area.Add((i, j));
 
-            if(GetPerimeter(i, j + 1)) neighbour.Add((i, j + 0.5m));
-            if(GetPerimeter(i, j - 1)) neighbour.Add((i, j - 0.5m));
-            if(GetPerimeter(i + 1, j)) neighbour.Add((i + 0.5m, j));
-            if(GetPerimeter(i - 1, j)) neighbour.Add((i - 0.5m, j));
+            if (GetPerimeter(i, j + 1)) neighbour.Add((i, j + 0.5m));
+            if (GetPerimeter(i, j - 1)) neighbour.Add((i, j - 0.5m));
+            if (GetPerimeter(i + 1, j)) neighbour.Add((i + 0.5m, j));
+            if (GetPerimeter(i - 1, j)) neighbour.Add((i - 0.5m, j));
 
             return true;
         }
@@ -1114,7 +1107,7 @@ long Day12b(string[] input)
         visited.UnionWith(area);
 
         var sides = NumSides();
-        
+
         int NumSides()
         {
             var numSides = 0;
@@ -1123,13 +1116,13 @@ long Day12b(string[] input)
                 var onEdge = false;
                 for (int j = 0; j < input[i].Length; j++)
                 {
-                    if(!area.Contains((i, j)))
+                    if (!area.Contains((i, j)))
                     {
                         onEdge = false;
                         continue;
                     }
 
-                    if(!map.TryGetValue((i-1, j), out var curr) || curr != type)
+                    if (!map.TryGetValue((i - 1, j), out var curr) || curr != type)
                     {
                         if (!onEdge)
                         {
@@ -1147,13 +1140,13 @@ long Day12b(string[] input)
                 onEdge = false;
                 for (int j = 0; j < input[i].Length; j++)
                 {
-                    if(!area.Contains((i, j)))
+                    if (!area.Contains((i, j)))
                     {
                         onEdge = false;
                         continue;
                     }
 
-                    if(!map.TryGetValue((i+1, j), out var curr) || curr != type)
+                    if (!map.TryGetValue((i + 1, j), out var curr) || curr != type)
                     {
                         if (!onEdge)
                         {
@@ -1174,13 +1167,13 @@ long Day12b(string[] input)
                 var onEdge = false;
                 for (int i = 0; i < input.Length; i++)
                 {
-                    if(!area.Contains((i, j)))
+                    if (!area.Contains((i, j)))
                     {
                         onEdge = false;
                         continue;
                     }
 
-                    if(!map.TryGetValue((i, j-1), out var curr) || curr != type)
+                    if (!map.TryGetValue((i, j - 1), out var curr) || curr != type)
                     {
                         if (!onEdge)
                         {
@@ -1198,13 +1191,13 @@ long Day12b(string[] input)
                 onEdge = false;
                 for (int i = 0; i < input.Length; i++)
                 {
-                    if(!area.Contains((i, j)))
+                    if (!area.Contains((i, j)))
                     {
                         onEdge = false;
                         continue;
                     }
 
-                    if(!map.TryGetValue((i, j+1), out var curr) || curr != type)
+                    if (!map.TryGetValue((i, j + 1), out var curr) || curr != type)
                     {
                         if (!onEdge)
                         {
@@ -1248,7 +1241,7 @@ int Day13a(string[] input)
 
         for (int i = 0; i < 10000; i++)
         {
-            var (x, y) = (prize.x - b.x*i, prize.y - b.y*i);
+            var (x, y) = (prize.x - b.x * i, prize.y - b.y * i);
             var numUntilTarget = NumUntilTarget(a, (x, y));
             if (numUntilTarget != null)
             {
@@ -1296,7 +1289,7 @@ decimal Day13b(string[] input)
 
         decimal bClick = (a.x * prize.y - a.y * prize.x) / (a.x * b.y - b.x * a.y);
 
-        decimal aClick = (prize.x * b.y - prize.y * b.x) / (a.x*b.y - a.y*b.x);
+        decimal aClick = (prize.x * b.y - prize.y * b.x) / (a.x * b.y - a.y * b.x);
 
         if (((a.x * aClick) + (b.x * bClick), (a.y * aClick) + (b.y * bClick)) == prize)
         {
@@ -1325,11 +1318,11 @@ int Day14(string[] input, int s)
 
     for (int i = 0; i < s; i++)
     {
-        foreach(var bot in bots)
+        foreach (var bot in bots)
         {
             bot.Move();
         }
-        Debug(i+1);
+        Debug(i + 1);
     }
 
     Console.ReadKey();
@@ -1383,5 +1376,22 @@ int Day14(string[] input, int s)
 
         FConsole.DrawBuffer();
     }
+}
+static void Day15a(string text)
+{
+    var state = GameState.Read(text);
+
+    state.Run();
+    state.Draw();
+    Console.WriteLine(state.CalcGps());
+}
+
+static void Day15b(string text)
+{
+    var state = WideGameState.Read(text);
+
+    state.Run();
+    state.Draw();
+    Console.WriteLine(state.CalcGps());
 }
 #endregion

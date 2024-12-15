@@ -74,6 +74,8 @@ public class WideGameState(char[][] _map, string _moves)
 
             TryMove(axis);
             Draw();
+
+            Thread.Sleep(20);
         }
     }
 
