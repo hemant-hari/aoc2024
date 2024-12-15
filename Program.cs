@@ -13,9 +13,9 @@ var testText =
 #.....#
 #.....#
 #.....#
-#.....#
-#.....#
-#..OO@#
+#..O..#
+#..O..#
+#..O.@#
 #..O..#
 #.....#
 #######
@@ -48,6 +48,7 @@ v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^".Replace(
 var state = WideGameState.Read(testText);
 //GameState state = GameState.Read(input);
 
+state.Play();
 state.Run();
 state.Draw();
 Console.ReadKey();

@@ -17,7 +17,8 @@ public class WideGameState(char[][] _map, string _moves)
             .Select(
             x =>
                 x.SelectMany<char, char>(
-                    x => x switch {
+                    x => x switch
+                    {
                         'O' => ['[', ']'],
                         '@' => ['@', '.'],
                         _ => [x, x],
@@ -34,7 +35,7 @@ public class WideGameState(char[][] _map, string _moves)
     public void Run()
     {
         Draw();
-        Console.ReadKey();
+        var i = 0;
         foreach (var move in _moves)
         {
             var axis = move switch
@@ -48,7 +49,31 @@ public class WideGameState(char[][] _map, string _moves)
 
             TryMove(axis);
             Draw();
-            Console.ReadKey();
+            i++;
+        }
+    }
+
+    public void Play()
+    {
+        while (true)
+        {
+            var k = Console.ReadKey().KeyChar;
+            if(k == 'q')
+            {
+                return;
+            }
+
+            var axis = k switch
+            {
+                'w' => (0, -1),
+                'a' => (-1, 0),
+                'd' => (1, 0),
+                's' => (0, 1),
+                _ => throw new ArgumentException("o"),
+            };
+
+            TryMove(axis);
+            Draw();
         }
     }
 
@@ -108,7 +133,7 @@ public class WideGameState(char[][] _map, string _moves)
             {
                 var area = GetBoxArea(CalcPos(axis), axis);
 
-                if(MoveArea(area, axis))
+                if (MoveArea(area, axis))
                 {
                     Move(axis);
                 }
@@ -121,7 +146,7 @@ public class WideGameState(char[][] _map, string _moves)
         var xWidth = area.Select(p => p.x).ToHashSet().Order().ToArray();
         foreach (var xPos in xWidth)
         {
-            var minY = area.Where(p => p.x == xPos).Select(p => p.y * - axis.y).Min() * -axis.y;
+            var minY = area.Where(p => p.x == xPos).Select(p => p.y * axis.y).Min() * axis.y;
             var hasSpace = false;
             var origin = (xPos, minY - axis.y);
             for (int i = 2; ItemAt(axis, i, origin) != '#'; i++)
@@ -141,20 +166,19 @@ public class WideGameState(char[][] _map, string _moves)
 
         foreach (var xPos in xWidth)
         {
-            var minY = area.Where(p => p.x == xPos).Select(p => p.y * -axis.y).Min() * -axis.y;
+            var minY = area.Where(p => p.x == xPos).Select(p => p.y * axis.y).Min() * axis.y;
             var origin = (xPos, minY - axis.y);
             for (int i = 2; ItemAt(axis, i, origin) != '#'; i++)
             {
                 if (ItemAt(axis, i, origin) == '.')
                 {
-                    for (; i >= 1; i--)
+                    for (; i > 1; i--)
                     {
                         var newPos = CalcPos(axis, i, origin);
                         var boxPos = CalcPos(axis, i - 1, origin);
 
                         Set(newPos, ItemAt(axis, i - 1, origin));
                         Set(boxPos, '.');
-                        Draw();
                     }
 
                     break;
@@ -178,12 +202,12 @@ public class WideGameState(char[][] _map, string _moves)
                 return false;
             }
 
-            if(offset.x > 0 && curr == '[')
+            if (offset.x > 0 && curr == '[')
             {
                 return false;
             }
 
-            if(offset.x < 0 && curr == ']')
+            if (offset.x < 0 && curr == ']')
             {
                 return false;
             }
@@ -220,7 +244,7 @@ public class WideGameState(char[][] _map, string _moves)
     private void Set(Pos pos, char c)
     {
         var (x, y) = pos;
-        if(y < 0 || x < 0 || y > _map.Length || x > _map[0].Length)
+        if (y < 0 || x < 0 || y > _map.Length || x > _map[0].Length)
         {
             return;
         }
@@ -237,7 +261,7 @@ public class WideGameState(char[][] _map, string _moves)
     private char ItemAtPos(Pos pos)
     {
         var (x, y) = pos;
-        if(y < 0 || x < 0 || y > _map.Length || x > _map[0].Length)
+        if (y < 0 || x < 0 || y > _map.Length || x > _map[0].Length)
         {
             return '#';
         }
@@ -272,10 +296,22 @@ public class WideGameState(char[][] _map, string _moves)
     {
         for (int i = 0; i < _map.Length; i++)
         {
+            FConsole.SetChar(
+                0, i + 1, i.ToString()[0], ConsoleColor.White, ConsoleColor.Black);
+        }
+
+        for (int i = 0; i < _map[0].Length; i++)
+        {
+            FConsole.SetChar(
+                i + 1, 0, i.ToString()[0], ConsoleColor.White, ConsoleColor.Black);
+        }
+
+        for (int i = 0; i < _map.Length; i++)
+        {
             for (int j = 0; j < _map[i].Length; j++)
             {
                 FConsole.SetChar(
-                    j, i, _map[i][j], ConsoleColor.White, ConsoleColor.Black);
+                    j + 1, i + 1, _map[i][j], ConsoleColor.White, ConsoleColor.Black);
             }
         }
 
