@@ -121,7 +121,7 @@ public class WideGameState(char[][] _map, string _moves)
         var xWidth = area.Select(p => p.x).ToHashSet().Order().ToArray();
         foreach (var xPos in xWidth)
         {
-            var minY = area.Where(p => p.x == xPos).Select(p => p.y * -axis.y).Min();
+            var minY = area.Where(p => p.x == xPos).Select(p => p.y * - axis.y).Min() * -axis.y;
             var hasSpace = false;
             var origin = (xPos, minY - axis.y);
             for (int i = 2; ItemAt(axis, i, origin) != '#'; i++)
@@ -141,8 +141,8 @@ public class WideGameState(char[][] _map, string _moves)
 
         foreach (var xPos in xWidth)
         {
-            var minY = area.Where(p => p.x == xPos).Select(p => p.y * -axis.y).Min();
-            var origin = (xPos, minY);
+            var minY = area.Where(p => p.x == xPos).Select(p => p.y * -axis.y).Min() * -axis.y;
+            var origin = (xPos, minY - axis.y);
             for (int i = 2; ItemAt(axis, i, origin) != '#'; i++)
             {
                 if (ItemAt(axis, i, origin) == '.')
