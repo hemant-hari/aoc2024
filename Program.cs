@@ -45,14 +45,13 @@ vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v
 ^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>
 v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^".Replace("\r","");
 
-var state = WideGameState.Read(testText);
-//GameState state = GameState.Read(input);
+var state = WideGameState.Read(text);
 
-state.Play();
+//state.Play();
 state.Run();
 state.Draw();
-Console.ReadKey();
 Console.WriteLine(state.CalcGps());
+Console.ReadKey();
 
 #region completed
 

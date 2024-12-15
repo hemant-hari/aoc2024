@@ -69,7 +69,7 @@ public class WideGameState(char[][] _map, string _moves)
                 'a' => (-1, 0),
                 'd' => (1, 0),
                 's' => (0, 1),
-                _ => throw new ArgumentException("o"),
+                _ => (0,0),
             };
 
             TryMove(axis);
@@ -143,47 +143,23 @@ public class WideGameState(char[][] _map, string _moves)
 
     private bool MoveArea(HashSet<Pos> area, Pos axis)
     {
-        var xWidth = area.Select(p => p.x).ToHashSet().Order().ToArray();
-        foreach (var xPos in xWidth)
+        var cellsToMove = area.OrderByDescending(p => p.y * axis.y);
+        foreach (var cell in cellsToMove)
         {
-            var minY = area.Where(p => p.x == xPos).Select(p => p.y * axis.y).Min() * axis.y;
-            var hasSpace = false;
-            var origin = (xPos, minY - axis.y);
-            for (int i = 2; ItemAt(axis, i, origin) != '#'; i++)
-            {
-                if (ItemAt(axis, i, origin) == '.')
-                {
-                    hasSpace = true;
-                    break;
-                }
-            }
-
-            if (!hasSpace)
+            var newPos = CalcPos(axis, 1, cell);
+            if(ItemAtPos(newPos) == '#')
             {
                 return false;
             }
         }
 
-        foreach (var xPos in xWidth)
+        foreach (var cell in cellsToMove)
         {
-            var minY = area.Where(p => p.x == xPos).Select(p => p.y * axis.y).Min() * axis.y;
-            var origin = (xPos, minY - axis.y);
-            for (int i = 2; ItemAt(axis, i, origin) != '#'; i++)
-            {
-                if (ItemAt(axis, i, origin) == '.')
-                {
-                    for (; i > 1; i--)
-                    {
-                        var newPos = CalcPos(axis, i, origin);
-                        var boxPos = CalcPos(axis, i - 1, origin);
+            var newPos = CalcPos(axis, 1, cell);
+            var boxPos = cell;
 
-                        Set(newPos, ItemAt(axis, i - 1, origin));
-                        Set(boxPos, '.');
-                    }
-
-                    break;
-                }
-            }
+            Set(newPos, ItemAtPos(cell));
+            Set(boxPos, '.');
         }
 
         return true;
