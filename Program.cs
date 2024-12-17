@@ -7,23 +7,21 @@ using Pos = (int x, int y);
 FConsole.Initialize("test");
 var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day16.txt");
 
-var testText = @"#################
-#...#...#...#..E#
-#.#.#.#.#.#.#.#.#
-#.#.#.#...#...#.#
-#.#.#.#.###.#.#.#
-#...#.#.#.....#.#
-#.#.#.#.#.#####.#
-#.#...#.#.#.....#
-#.#.#####.#.###.#
-#.#.#.......#...#
-#.#.###.#####.###
-#.#.#...#.....#.#
-#.#.#.#####.###.#
-#.#.#.........#.#
-#.#.#.#########.#
-#S#.............#
-#################".Split("\r\n");
+var testText = @"###############
+#.......#....E#
+#.#.###.#.###.#
+#.....#.#...#.#
+#.###.#####.#.#
+#.#.#.......#.#
+#.#.#####.###.#
+#...........#.#
+###.#.#####.#.#
+#...#.....#.#.#
+#.#.#.###.#.#.#
+#.....#...#.#.#
+#.###.#.#.#.#.#
+#S..#.....#...#
+###############".Split("\r\n");
 
 var testText2 = @"#################
 #...#...#...#..E#
@@ -43,11 +41,11 @@ var testText2 = @"#################
 #S#.............#
 #################".Split("\r\n");
 
-var input = testText;
+var input = text;
 
-Console.WriteLine(Day16a(input));
+Console.WriteLine(Day16(input));
 
-int Day16a(string[] input)
+int Day16(string[] input)
 {
     PosDir start = new(-1, -1, '0');
     PosDir endPosDir = new(-1, -1, '0');
@@ -129,6 +127,23 @@ int Day16a(string[] input)
             }
         }
     }
+
+    HashSet<Pos> seats = [];
+
+    void NumBestPathCells(PosDir end)
+    {
+        if(end == start) return;
+
+        seats.Add(end.ToPos());
+        var prevs = prevMap[end];
+        foreach(var prev in prevs)
+        {
+            NumBestPathCells(prev);
+        }
+    }
+
+    NumBestPathCells(endPosDir);
+    Console.WriteLine(seats.Count);
 
     return new[] {
             endPosDir with { dir = 'n' },

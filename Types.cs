@@ -3,7 +3,12 @@ using System.Net.WebSockets;
 using System.Text.RegularExpressions;
 using Pos = (int x, int y);
 
-record PosDir(int x, int y, char dir) { }
+record PosDir(int x, int y, char dir) {
+    public Pos ToPos()
+    {
+        return new Pos(x, y);
+    }
+}
 
 //Part 2
 public class WideGameState(char[][] _map, string _moves)
