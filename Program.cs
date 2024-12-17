@@ -5,46 +5,138 @@ using System.Text.RegularExpressions;
 using Pos = (int x, int y);
 
 FConsole.Initialize("test");
-var text = File.ReadAllText(@"C:\Users\Hemant Hari\source\repos\aoc2024\day15.txt");
+var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day16.txt");
 
-var testText =
-@"#######
-#...#.#
-#.....#
-#.....#
-#.....#
-#..O..#
-#..O..#
-#..O.@#
-#..O..#
-#.....#
-#######
+var testText = @"#################
+#...#...#...#..E#
+#.#.#.#.#.#.#.#.#
+#.#.#.#...#...#.#
+#.#.#.#.###.#.#.#
+#...#.#.#.....#.#
+#.#.#.#.#.#####.#
+#.#...#.#.#.....#
+#.#.#####.#.###.#
+#.#.#.......#...#
+#.#.###.#####.###
+#.#.#...#.....#.#
+#.#.#.#####.###.#
+#.#.#.........#.#
+#.#.#.#########.#
+#S#.............#
+#################".Split("\r\n");
 
-<vv<<^^<<^^^^^".Replace("\r", "");
+var testText2 = @"#################
+#...#...#...#..E#
+#.#.#.#.#.#.#.#.#
+#.#.#.#...#...#.#
+#.#.#.#.###.#.#.#
+#...#.#.#.....#.#
+#.#.#.#.#.#####.#
+#.#...#.#.#.....#
+#.#.#####.#.###.#
+#.#.#.......#...#
+#.#.###.#####.###
+#.#.#...#.....#.#
+#.#.#.#####.###.#
+#.#.#.........#.#
+#.#.#.#########.#
+#S#.............#
+#################".Split("\r\n");
 
-var estText =
-@"##########
-#..O..O.O#
-#......O.#
-#.OO..O.O#
-#..O@..O.#
-#O#..O...#
-#O..O..O.#
-#.OO.O.OO#
-#....O...#
-##########
+var input = testText;
 
-<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^
-vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v
-><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<
-<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^
-^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><
-^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^
->^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^
-<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>
-^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>
-v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^".Replace("\r", "");
+Console.WriteLine(Day16a(input));
 
+int Day16a(string[] input)
+{
+    PosDir start = new(-1, -1, '0');
+    PosDir endPosDir = new(-1, -1, '0');
+    Dictionary<PosDir, int> distMap = [];
+    Dictionary<PosDir, HashSet<PosDir>> prevMap = [];
+    PriorityQueue<PosDir, int> q = new();
+    for (int i = 0; i < input.Length; i++)
+    {
+        for (int j = 0; j < input[i].Length; j++)
+        {
+            var x = input[i][j];
+            if (x == 'S')
+            {
+                start = new(x: j, y: i, 'e');
+                distMap[(start)] = 0;
+                distMap[new(j, i, 'n')] = int.MaxValue;
+                distMap[new(j, i, 'w')] = int.MaxValue;
+                distMap[new(j, i, 's')] = int.MaxValue;
+            }
+            else if (x == '.')
+            {
+                distMap[new(j, i, 'n')] = int.MaxValue;
+                distMap[new(j, i, 'e')] = int.MaxValue;
+                distMap[new(j, i, 'w')] = int.MaxValue;
+                distMap[new(j, i, 's')] = int.MaxValue;
+            }
+            else if (x == 'E')
+            {
+                endPosDir = new(x: j, y: i, 'n');
+                distMap[endPosDir] = int.MaxValue;
+                distMap[new(j, i, 'e')] = int.MaxValue;
+                distMap[new(j, i, 'w')] = int.MaxValue;
+                distMap[new(j, i, 's')] = int.MaxValue;
+            }
+        }
+    }
+
+    q.Enqueue(start, 0);
+
+    while (q.TryDequeue(out var pos, out var dist))
+    {
+        PosDir forward = pos.dir switch
+        {
+            'n' => new(pos.x, pos.y - 1, pos.dir),
+            'e' => new(pos.x + 1, pos.y, pos.dir),
+            'w' => new(pos.x - 1, pos.y, pos.dir),
+            's' => new(pos.x, pos.y + 1, pos.dir),
+            _ => throw new Exception(),
+        };
+
+        HashSet<PosDir> neighbours = [
+            forward,
+            pos with { dir = 'n' },
+            pos with { dir = 'e' },
+            pos with { dir = 'w' },
+            pos with { dir = 's' },
+        ];
+
+        neighbours.Remove(pos);
+
+        foreach (var neighbour in neighbours)
+        {
+            if (!distMap.ContainsKey(neighbour))
+            {
+                continue;
+            }
+
+            var distFromPos = pos.dir == neighbour.dir ? 1 : 1000;
+            var distFromSource = distMap[pos] + distFromPos;
+            if (distFromSource < distMap[neighbour])
+            {
+                q.Enqueue(neighbour, 1);
+                prevMap[neighbour] = [pos];
+                distMap[neighbour] = distFromSource;
+            }
+            else if (distFromSource == distMap[neighbour])
+            {
+                prevMap[neighbour].Add(pos);
+            }
+        }
+    }
+
+    return new[] {
+            endPosDir with { dir = 'n' },
+            endPosDir with { dir = 'e' },
+            endPosDir with { dir = 'w' },
+            endPosDir with { dir = 's' },
+    }.Select(x => distMap[x]).Min();
+}
 
 #region completed
 
