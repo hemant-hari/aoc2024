@@ -45,113 +45,6 @@ var input = text;
 
 Console.WriteLine(Day16(input));
 
-int Day16(string[] input)
-{
-    PosDir start = new(-1, -1, '0');
-    PosDir endPosDir = new(-1, -1, '0');
-    Dictionary<PosDir, int> distMap = [];
-    Dictionary<PosDir, HashSet<PosDir>> prevMap = [];
-    PriorityQueue<PosDir, int> q = new();
-    for (int i = 0; i < input.Length; i++)
-    {
-        for (int j = 0; j < input[i].Length; j++)
-        {
-            var x = input[i][j];
-            if (x == 'S')
-            {
-                start = new(x: j, y: i, 'e');
-                distMap[(start)] = 0;
-                distMap[new(j, i, 'n')] = int.MaxValue;
-                distMap[new(j, i, 'w')] = int.MaxValue;
-                distMap[new(j, i, 's')] = int.MaxValue;
-            }
-            else if (x == '.')
-            {
-                distMap[new(j, i, 'n')] = int.MaxValue;
-                distMap[new(j, i, 'e')] = int.MaxValue;
-                distMap[new(j, i, 'w')] = int.MaxValue;
-                distMap[new(j, i, 's')] = int.MaxValue;
-            }
-            else if (x == 'E')
-            {
-                endPosDir = new(x: j, y: i, 'n');
-                distMap[endPosDir] = int.MaxValue;
-                distMap[new(j, i, 'e')] = int.MaxValue;
-                distMap[new(j, i, 'w')] = int.MaxValue;
-                distMap[new(j, i, 's')] = int.MaxValue;
-            }
-        }
-    }
-
-    q.Enqueue(start, 0);
-
-    while (q.TryDequeue(out var pos, out var dist))
-    {
-        PosDir forward = pos.dir switch
-        {
-            'n' => new(pos.x, pos.y - 1, pos.dir),
-            'e' => new(pos.x + 1, pos.y, pos.dir),
-            'w' => new(pos.x - 1, pos.y, pos.dir),
-            's' => new(pos.x, pos.y + 1, pos.dir),
-            _ => throw new Exception(),
-        };
-
-        HashSet<PosDir> neighbours = [
-            forward,
-            pos with { dir = 'n' },
-            pos with { dir = 'e' },
-            pos with { dir = 'w' },
-            pos with { dir = 's' },
-        ];
-
-        neighbours.Remove(pos);
-
-        foreach (var neighbour in neighbours)
-        {
-            if (!distMap.ContainsKey(neighbour))
-            {
-                continue;
-            }
-
-            var distFromPos = pos.dir == neighbour.dir ? 1 : 1000;
-            var distFromSource = distMap[pos] + distFromPos;
-            if (distFromSource < distMap[neighbour])
-            {
-                q.Enqueue(neighbour, 1);
-                prevMap[neighbour] = [pos];
-                distMap[neighbour] = distFromSource;
-            }
-            else if (distFromSource == distMap[neighbour])
-            {
-                prevMap[neighbour].Add(pos);
-            }
-        }
-    }
-
-    HashSet<Pos> seats = [];
-
-    void NumBestPathCells(PosDir end)
-    {
-        if(end == start) return;
-
-        seats.Add(end.ToPos());
-        var prevs = prevMap[end];
-        foreach(var prev in prevs)
-        {
-            NumBestPathCells(prev);
-        }
-    }
-
-    NumBestPathCells(endPosDir);
-    Console.WriteLine(seats.Count);
-
-    return new[] {
-            endPosDir with { dir = 'n' },
-            endPosDir with { dir = 'e' },
-            endPosDir with { dir = 'w' },
-            endPosDir with { dir = 's' },
-    }.Select(x => distMap[x]).Min();
-}
 
 #region completed
 
@@ -1500,5 +1393,114 @@ static void Day15b(string text)
     state.Run();
     state.Draw();
     Console.WriteLine(state.CalcGps());
+}
+
+
+int Day16(string[] input)
+{
+    PosDir start = new(-1, -1, '0');
+    PosDir endPosDir = new(-1, -1, '0');
+    Dictionary<PosDir, int> distMap = [];
+    Dictionary<PosDir, HashSet<PosDir>> prevMap = [];
+    PriorityQueue<PosDir, int> q = new();
+    for (int i = 0; i < input.Length; i++)
+    {
+        for (int j = 0; j < input[i].Length; j++)
+        {
+            var x = input[i][j];
+            if (x == 'S')
+            {
+                start = new(x: j, y: i, 'e');
+                distMap[(start)] = 0;
+                distMap[new(j, i, 'n')] = int.MaxValue;
+                distMap[new(j, i, 'w')] = int.MaxValue;
+                distMap[new(j, i, 's')] = int.MaxValue;
+            }
+            else if (x == '.')
+            {
+                distMap[new(j, i, 'n')] = int.MaxValue;
+                distMap[new(j, i, 'e')] = int.MaxValue;
+                distMap[new(j, i, 'w')] = int.MaxValue;
+                distMap[new(j, i, 's')] = int.MaxValue;
+            }
+            else if (x == 'E')
+            {
+                endPosDir = new(x: j, y: i, 'n');
+                distMap[endPosDir] = int.MaxValue;
+                distMap[new(j, i, 'e')] = int.MaxValue;
+                distMap[new(j, i, 'w')] = int.MaxValue;
+                distMap[new(j, i, 's')] = int.MaxValue;
+            }
+        }
+    }
+
+    q.Enqueue(start, 0);
+
+    while (q.TryDequeue(out var pos, out var dist))
+    {
+        PosDir forward = pos.dir switch
+        {
+            'n' => new(pos.x, pos.y - 1, pos.dir),
+            'e' => new(pos.x + 1, pos.y, pos.dir),
+            'w' => new(pos.x - 1, pos.y, pos.dir),
+            's' => new(pos.x, pos.y + 1, pos.dir),
+            _ => throw new Exception(),
+        };
+
+        HashSet<PosDir> neighbours = [
+            forward,
+            pos with { dir = 'n' },
+            pos with { dir = 'e' },
+            pos with { dir = 'w' },
+            pos with { dir = 's' },
+        ];
+
+        neighbours.Remove(pos);
+
+        foreach (var neighbour in neighbours)
+        {
+            if (!distMap.ContainsKey(neighbour))
+            {
+                continue;
+            }
+
+            var distFromPos = pos.dir == neighbour.dir ? 1 : 1000;
+            var distFromSource = distMap[pos] + distFromPos;
+            if (distFromSource < distMap[neighbour])
+            {
+                q.Enqueue(neighbour, 1);
+                prevMap[neighbour] = [pos];
+                distMap[neighbour] = distFromSource;
+            }
+            else if (distFromSource == distMap[neighbour])
+            {
+                prevMap[neighbour].Add(pos);
+            }
+        }
+    }
+
+    HashSet<Pos> seats = [];
+
+    void NumBestPathCells(PosDir end)
+    {
+        if(end == start) return;
+
+        seats.Add(end.ToPos());
+        var prevs = prevMap[end];
+        foreach(var prev in prevs)
+        {
+            NumBestPathCells(prev);
+        }
+    }
+
+    NumBestPathCells(endPosDir);
+    Console.WriteLine(seats.Count);
+
+    return new[] {
+            endPosDir with { dir = 'n' },
+            endPosDir with { dir = 'e' },
+            endPosDir with { dir = 'w' },
+            endPosDir with { dir = 's' },
+    }.Select(x => distMap[x]).Min();
 }
 #endregion
