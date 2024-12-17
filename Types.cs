@@ -10,6 +10,125 @@ record PosDir(int x, int y, char dir) {
     }
 }
 
+public class VirtualMachine
+{
+    private long _registerA = 0;
+    private long _registerB = 0;
+    private long _registerC = 0;
+    private long _instruction = 0;
+
+    private readonly int[] _instructions;
+
+    public VirtualMachine(int registerA, int registerB, int registerC, int[] instructions)
+    {
+        _registerA = registerA;
+        _registerB = registerB;
+        _registerC = registerC;
+        _instructions = instructions;
+    }
+
+    public void Deconstruct(out long registerA, out long registerB, out long registerC, out int[] instructions)
+    {
+        registerA = _registerA;
+        registerB = _registerB;
+        registerC = _registerC;
+        instructions = _instructions;
+    }
+
+    public static VirtualMachine Init(string input)
+    {
+        var inputSplit = input.Split("\n\n");
+
+        var registers =
+            inputSplit[0]
+                .Split("\n")
+                .Select(x => x.Split(": ")[1])
+                .Select(int.Parse)
+                .ToArray();
+
+        var instructions =
+            inputSplit[1]
+                .Split(": ")[1]
+                .Split(',')
+                .Select(int.Parse)
+                .ToArray();
+
+        return new VirtualMachine(
+            registerA: registers[0],
+            registerB: registers[1],
+            registerC: registers[2],
+            instructions);
+    }
+
+    public void Reset(long rA, long rB, long rC)
+    {
+        _registerA = rA;
+        _registerB = rB;
+        _registerC = rC;
+        _instruction = 0;
+    }
+
+    public IEnumerable<int> Run()
+    {
+        while (_instruction < _instructions.Length)
+        {
+            var instruction = _instruction;
+            var cmd = _instructions[_instruction];
+            var operandVal = _instructions[_instruction + 1];
+            long ComboOperand()
+            {
+                if (operandVal <= 3)
+                {
+                    return operandVal;
+                }
+
+                switch (operandVal)
+                {
+                    case 4: return _registerA;
+                    case 5: return _registerB;
+                    case 6: return _registerC;
+                }
+
+                throw new Exception();
+            }
+
+            switch (cmd)
+            {
+                case 0: //adv
+                    _registerA = (int)Math.Floor(_registerA / Math.Pow(2, ComboOperand()));
+                    break;
+                case 1: //bxl
+                    _registerB = _registerB ^ operandVal;
+                    break;
+                case 2: // bst
+                    _registerB = ComboOperand() % 8;
+                    break;
+                case 3: //jnz
+                    if (_registerA == 0) break;
+                    _instruction = operandVal;
+                    break;
+                case 4: //bxc
+                    _registerB = _registerB ^ _registerC;
+                    break;
+                case 5: // out
+                    yield return (int) (ComboOperand() % 8);
+                    break;
+                case 6: // bdv
+                    _registerB = (int)Math.Floor(_registerA / Math.Pow(2, ComboOperand()));
+                    break;
+                case 7:
+                    _registerC = (int)Math.Floor(_registerA / Math.Pow(2, ComboOperand()));
+                    break;
+            }
+
+            if (_instruction == instruction)
+            {
+                _instruction += 2;
+            }
+        }
+    }
+}
+
 //Part 2
 public class WideGameState(char[][] _map, string _moves)
 {

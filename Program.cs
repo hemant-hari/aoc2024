@@ -5,46 +5,54 @@ using System.Text.RegularExpressions;
 using Pos = (int x, int y);
 
 FConsole.Initialize("test");
-var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day16.txt");
+var text = File.ReadAllText(@"C:\Users\Hemant Hari\source\repos\aoc2024\day17.txt");
 
-var testText = @"###############
-#.......#....E#
-#.#.###.#.###.#
-#.....#.#...#.#
-#.###.#####.#.#
-#.#.#.......#.#
-#.#.#####.###.#
-#...........#.#
-###.#.#####.#.#
-#...#.....#.#.#
-#.#.#.###.#.#.#
-#.....#...#.#.#
-#.###.#.#.#.#.#
-#S..#.....#...#
-###############".Split("\r\n");
+var testText = @"Register A: 2024
+Register B: 0
+Register C: 0
 
-var testText2 = @"#################
-#...#...#...#..E#
-#.#.#.#.#.#.#.#.#
-#.#.#.#...#...#.#
-#.#.#.#.###.#.#.#
-#...#.#.#.....#.#
-#.#.#.#.#.#####.#
-#.#...#.#.#.....#
-#.#.#####.#.###.#
-#.#.#.......#...#
-#.#.###.#####.###
-#.#.#...#.....#.#
-#.#.#.#####.###.#
-#.#.#.........#.#
-#.#.#.#########.#
-#S#.............#
-#################".Split("\r\n");
+Program: 0,3,5,4,3,0".Replace("\r", "");
 
 var input = text;
 
-Console.WriteLine(Day16(input));
+/*
+2,4,
+1,1,
+7,5,
+1,5,
+4,3,
+5,5,
+0,3,
+3,0,
 
+ */
+
+Console.WriteLine(Day17b(input));
+
+long Day17b(string input)
+{
+    var vm = VirtualMachine.Init(input);
+
+    var (rA, rB, rC, inst) = vm;
+    rA = long.MaxValue - int.MaxValue;
+
+    while (true)
+    {
+        vm.Reset(rA, rB, rC);
+
+        vm.Reset(rA, rB, rC);
+        var output = vm.Run();
+        Console.WriteLine(string.Join(",", output));
+        Console.WriteLine(string.Join(",", inst));
+        if(Enumerable.SequenceEqual(vm.Run(), inst))
+        {
+            return rA;
+        }
+
+
+        rA++;
+    }
+}
 
 #region completed
 
@@ -1483,11 +1491,11 @@ int Day16(string[] input)
 
     void NumBestPathCells(PosDir end)
     {
-        if(end == start) return;
+        if (end == start) return;
 
         seats.Add(end.ToPos());
         var prevs = prevMap[end];
-        foreach(var prev in prevs)
+        foreach (var prev in prevs)
         {
             NumBestPathCells(prev);
         }
@@ -1502,5 +1510,12 @@ int Day16(string[] input)
             endPosDir with { dir = 'w' },
             endPosDir with { dir = 's' },
     }.Select(x => distMap[x]).Min();
+}
+
+static void Day17a(string input)
+{
+    var vm = VirtualMachine.Init(input);
+    var output = vm.Run().ToList();
+    Console.WriteLine(string.Join(",", output));
 }
 #endregion
