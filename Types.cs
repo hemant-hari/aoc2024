@@ -1,5 +1,6 @@
 ﻿using FastConsole;
 using System.Net.WebSockets;
+using System.Numerics;
 using System.Text.RegularExpressions;
 using Pos = (int x, int y);
 
@@ -12,9 +13,9 @@ record PosDir(int x, int y, char dir) {
 
 public class VirtualMachine
 {
-    private long _registerA = 0;
-    private long _registerB = 0;
-    private long _registerC = 0;
+    private BigInteger _registerA = 0;
+    private BigInteger _registerB = 0;
+    private BigInteger _registerC = 0;
     private long _instruction = 0;
 
     private readonly int[] _instructions;
@@ -27,7 +28,7 @@ public class VirtualMachine
         _instructions = instructions;
     }
 
-    public void Deconstruct(out long registerA, out long registerB, out long registerC, out int[] instructions)
+    public void Deconstruct(out BigInteger registerA, out BigInteger registerB, out BigInteger registerC, out int[] instructions)
     {
         registerA = _registerA;
         registerB = _registerB;
@@ -60,7 +61,7 @@ public class VirtualMachine
             instructions);
     }
 
-    public void Reset(long rA, long rB, long rC)
+    public void Reset(BigInteger rA, BigInteger rB, BigInteger rC)
     {
         _registerA = rA;
         _registerB = rB;
@@ -75,7 +76,7 @@ public class VirtualMachine
             var instruction = _instruction;
             var cmd = _instructions[_instruction];
             var operandVal = _instructions[_instruction + 1];
-            long ComboOperand()
+            BigInteger ComboOperand()
             {
                 if (operandVal <= 3)
                 {
@@ -95,7 +96,7 @@ public class VirtualMachine
             switch (cmd)
             {
                 case 0: //adv
-                    _registerA = (int)Math.Floor(_registerA / Math.Pow(2, ComboOperand()));
+                    _registerA = _registerA / BigInteger.Pow(2, (int)ComboOperand());
                     break;
                 case 1: //bxl
                     _registerB = _registerB ^ operandVal;
@@ -114,10 +115,10 @@ public class VirtualMachine
                     yield return (int) (ComboOperand() % 8);
                     break;
                 case 6: // bdv
-                    _registerB = (int)Math.Floor(_registerA / Math.Pow(2, ComboOperand()));
+                    _registerB = _registerA / BigInteger.Pow(2, (int)ComboOperand());
                     break;
                 case 7:
-                    _registerC = (int)Math.Floor(_registerA / Math.Pow(2, ComboOperand()));
+                    _registerC = _registerA / BigInteger.Pow(2, (int)ComboOperand());
                     break;
             }
 

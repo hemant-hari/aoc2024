@@ -1,54 +1,89 @@
 ﻿using FastConsole;
 using System.Collections.Immutable;
 using System.Drawing;
+using System.Numerics;
 using System.Text.RegularExpressions;
 using Pos = (int x, int y);
 
 FConsole.Initialize("test");
-var text = File.ReadAllText(@"C:\Users\Hemant Hari\source\repos\aoc2024\day17.txt");
+var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day18.txt");
 
-var testText = @"Register A: 2024
-Register B: 0
-Register C: 0
+var testText = @"5,4
+4,2
+4,5
+3,0
+2,1
+6,3
+2,4
+1,5
+0,6
+3,3
+2,6
+5,1
+1,2
+5,5
+2,5
+6,5
+1,4
+0,4
+6,4
+1,1
+6,1
+1,0
+0,5
+1,6
+2,0".Split("\r\n");
 
-Program: 0,3,5,4,3,0".Replace("\r", "");
+var input = (text, (70, 70), 1024);
+input = (testText, (6, 6), 12);
+input = (text, (70, 70), 3011);
 
-var input = text;
+Console.WriteLine(Day18(input));
 
-/*
-2,4,
-1,1,
-7,5,
-1,5,
-4,3,
-5,5,
-0,3,
-3,0,
 
- */
-
-Console.WriteLine(Day17b(input));
-
-long Day17b(string input)
+static IEnumerable<int> Hardcoded(BigInteger a)
 {
+    BigInteger b = 0;
+    BigInteger c = 0;
+
+    while (a != 0)
+    {
+        b = a % 8;
+        b = b ^ 1;
+        c = a / BigInteger.Pow(2, (int)b);
+
+        b = b ^ 0b101;
+        b = b ^ c;
+        yield return (int)(b%8);
+        a = a / 8;
+    }
+}
+
+BigInteger Day17b()
+{
+    var input = """
+        Register A: 38610541
+        Register B: 0
+        Register C: 0
+
+        Program: 2,4,1,1,7,5,1,5,4,3,5,5,0,3,3,0
+        """;
+
     var vm = VirtualMachine.Init(input);
 
     var (rA, rB, rC, inst) = vm;
-    rA = long.MaxValue - int.MaxValue;
+    rA = BigInteger.Pow(2, 48) - BigInteger.Pow(2, 45) + 0b110_000 + 0b110;
+    rA = 205292059155489;
 
     while (true)
     {
-        vm.Reset(rA, rB, rC);
-
-        vm.Reset(rA, rB, rC);
-        var output = vm.Run();
-        Console.WriteLine(string.Join(",", output));
-        Console.WriteLine(string.Join(",", inst));
+        var output = Hardcoded(rA);
+        // Console.WriteLine(string.Join(",", output));
+        // Console.WriteLine(string.Join(",", inst));
         if(Enumerable.SequenceEqual(vm.Run(), inst))
         {
             return rA;
         }
-
 
         rA++;
     }
@@ -1403,7 +1438,6 @@ static void Day15b(string text)
     Console.WriteLine(state.CalcGps());
 }
 
-
 int Day16(string[] input)
 {
     PosDir start = new(-1, -1, '0');
@@ -1517,5 +1551,63 @@ static void Day17a(string input)
     var vm = VirtualMachine.Init(input);
     var output = vm.Run().ToList();
     Console.WriteLine(string.Join(",", output));
+}
+
+// solved part 2 with a manual binary search!
+int Day18((string[] text, (int x, int y) endPos, int bytesToTake) input)
+{
+    Pos start = (0, 0);
+    Pos endPos = input.endPos;
+    HashSet<Pos> map = Enumerable.Range(0, endPos.x + 1)
+        .SelectMany(x => Enumerable.Range(0, endPos.y + 1).Select(y => (x, y)))
+        .ToHashSet();
+
+    input.text
+        .Select(x => x.Split(','))
+        .Select(l => (x: int.Parse(l[0]), y: int.Parse(l[1])))
+        .Take(input.bytesToTake)
+        .ToList()
+        .ForEach(x => map.Remove(x));
+
+    Dictionary<Pos, int> distMap = map.ToDictionary(k => k, v => int.MaxValue);
+    distMap[start] = 0;
+
+    Dictionary<Pos, HashSet<Pos>> prevMap = [];
+
+    PriorityQueue<Pos, int> q = new();
+    q.Enqueue(start, 0);
+
+    while (q.TryDequeue(out var pos, out var dist))
+    {
+        Pos[] neighbours = [
+            (pos.x, pos.y - 1),
+            (pos.x + 1, pos.y),
+            (pos.x - 1, pos.y),
+            (pos.x, pos.y + 1),
+        ];
+
+        foreach (var neighbour in neighbours.Where(map.Contains))
+        {
+            if (!distMap.ContainsKey(neighbour))
+            {
+                continue;
+            }
+
+            var distFromPos = 1;
+            var distFromSource = distMap[pos] + distFromPos;
+            if (distFromSource < distMap[neighbour])
+            {
+                q.Enqueue(neighbour, 1);
+                prevMap[neighbour] = [pos];
+                distMap[neighbour] = distFromSource;
+            }
+            else if (distFromSource == distMap[neighbour])
+            {
+                prevMap[neighbour].Add(pos);
+            }
+        }
+    }
+
+    return distMap[endPos];
 }
 #endregion
