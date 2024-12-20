@@ -34,16 +34,12 @@ var testText2 = """
     #######
     """.Split("\r\n");
 
-var input = text;
-
-Console.WriteLine(Day20a(input));
+Console.WriteLine(Day20a(text));
 
 int Day20a(string[] input)
 {
     PosCheat start = default;
     Pos endPos = (-1, -1);
-    Dictionary<PosCheat, int> distMap = [];
-    int getDist(PosCheat pc) => distMap.GetValueOrDefault(pc, int.MaxValue);
 
     Dictionary<Pos, char> map = [];
     for (int i = 0; i < input.Length; i++)
@@ -54,7 +50,6 @@ int Day20a(string[] input)
             if (x == 'S')
             {
                 start = ((x: j, y: i), null, null);
-                distMap[start] = 0;
             }
             else if (x == 'E')
             {
@@ -65,64 +60,14 @@ int Day20a(string[] input)
         }
     }
 
-    map[start.Item1] = '.';
+    map[start.pos] = '.';
     map[endPos] = '.';
 
-    //Dictionary<PosCheat, HashSet<PosCheat>> prevMap = [];
-    PriorityQueue<PosCheat, int> q = new();
-    q.Enqueue(start, 0);
+    var noCheatMap = RunMapping((endPos, null, null), cheatsEnabled: false);
 
-    while (q.TryDequeue(out var posCheat, out var dist))
-    {
-        var (pos, cheat1, cheat2) = posCheat;
-        ReadOnlySpan<Pos> neighbours = [
-            (pos.x, pos.y - 1),
-            (pos.x + 1, pos.y),
-            (pos.x - 1, pos.y),
-            (pos.x, pos.y + 1),
-        ];
+    var noCheatTime = noCheatMap[start];
 
-        foreach (var neighbour in neighbours)
-        {
-            if(!map.TryGetValue(neighbour, out var c))
-            {
-                continue;
-            }
-
-            // no more passing through walls
-            if (cheat1 != null && c != '.')
-            {
-                continue;
-            }
-
-            bool isFree = c == '.';
-            var (newC1, newC2) = (cheat1, cheat2);
-            if (cheat1 != null && cheat2 == null)
-            {
-                newC2 = neighbour;
-            }
-            else if (!isFree && map.ContainsKey(pos))
-            {
-                newC1 = neighbour;
-            }
-
-            var distFromPos = 1;
-            var distFromSource = getDist(posCheat) + distFromPos;
-            var neighbourCheat = (neighbour, newC1, newC2);
-            if (distFromSource < getDist(neighbourCheat))
-            {
-                q.Enqueue(neighbourCheat, 1);
-                //prevMap[neighbourCheat] = [(pos, newC1, newC2)];
-                distMap[neighbourCheat] = distFromSource;
-            }
-            else if (distFromSource <= distMap[neighbourCheat])
-            {
-                //prevMap[(neighbour, newC1, newC2)].Add((pos, newC1, newC2));
-            }
-        }
-    }
-
-    var noCheatTime =  distMap[(endPos, null, null)];
+    var distMap = RunMapping(start, cheatsEnabled: true, noCheatMap);
 
     var allCheats = distMap.Keys
         .Where(x => x.pos == endPos && x.cheat2 != null)
@@ -139,6 +84,69 @@ int Day20a(string[] input)
 
     return allCheats.Where(x => x.Saved >= 100)
                     .Sum(x => x.Count);
+
+    Dictionary<PosCheat, int> RunMapping(
+        PosCheat start,
+        bool cheatsEnabled,
+        Dictionary<PosCheat, int>? noCheatMap = null)
+    {
+        Dictionary<PosCheat, int> distMap = [];
+        distMap[start] = 0;
+        int getDist(PosCheat pc) => distMap.GetValueOrDefault(pc, int.MaxValue);
+
+        PriorityQueue<PosCheat, int> q = new();
+        q.Enqueue(start, 0);
+
+        while (q.TryDequeue(out var posCheat, out var dist))
+        {
+            var (pos, cheat1, cheat2) = posCheat;
+            ReadOnlySpan<Pos> neighbours = [
+                (pos.x, pos.y - 1),
+                (pos.x + 1, pos.y),
+                (pos.x - 1, pos.y),
+                (pos.x, pos.y + 1),
+            ];
+
+            foreach (var neighbour in neighbours)
+            {
+                if (!map.TryGetValue(neighbour, out var c))
+                {
+                    continue;
+                }
+
+                // no more passing through walls
+                if ((cheat1 != null || !cheatsEnabled) && c != '.')
+                {
+                    continue;
+                }
+
+                bool isFree = c == '.';
+                var (newC1, newC2) = (cheat1, cheat2);
+                if (cheat1 != null && cheat2 == null)
+                {
+                    newC2 = neighbour;
+                }
+                else if (!isFree && map.ContainsKey(pos))
+                {
+                    newC1 = neighbour;
+                }
+
+                var distFromSource = getDist(posCheat) + 1;
+                var neighbourCheat = (neighbour, newC1, newC2);
+                if (newC2 != null && noCheatMap?.TryGetValue((neighbour, null, null), out var remainingDist) == true)
+                {
+                    distMap[(endPos, newC1, newC2)] = distFromSource + remainingDist;
+                }
+                else if (distFromSource < getDist(neighbourCheat))
+                {
+                    q.Enqueue(neighbourCheat, 1);
+                    distMap[neighbourCheat] = distFromSource;
+                }
+            }
+        }
+
+        return distMap;
+    }
 
     /*
 0012345678901234
