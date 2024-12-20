@@ -34,13 +34,14 @@ var testText2 = """
     #######
     """.Split("\r\n");
 
-Console.WriteLine(Day20a(text));
+Console.WriteLine(Day20a(testText, 20));
+//Console.WriteLine(Day20a(testText, 2));
+//Console.WriteLine(Day20a(text, 2));
 
-int Day20a(string[] input)
+int Day20a(string[] input, int maxTimeInCheat)
 {
     PosCheat start = default;
     Pos endPos = (-1, -1);
-    int maxTimeInCheat = 2;
 
     Dictionary<Pos, char> map = [];
     for (int i = 0; i < input.Length; i++)
@@ -73,11 +74,19 @@ int Day20a(string[] input)
     var allCheats = distMap.Keys
         .Where(x => x.pos == endPos && x.cheat2 != null)
         .Where(x => noCheatTime - distMap[x] > 0)
+        .GroupBy(x => (x.pos, x.cheat1, x.cheat2))
+        .Select(x => (x.Key.pos, x.Key.cheat1, x.Key.cheat2, x.Min(x => x.cheatTime)))
         .GroupBy(x => noCheatTime - distMap[x])
-        .Select(x => (Saved: x.Key, Count: x.Count()));
+        .Select(x => (Saved: x.Key, EndKeys: x.ToArray()));
+
+    allCheats
+        .Where(x => x.Saved >= 50)
+        .OrderBy(x => x.Saved)
+        .ToList()
+        .ForEach(x => Console.WriteLine((x.Saved, x.EndKeys.Length)));
 
     return allCheats.Where(x => x.Saved >= 100)
-                    .Sum(x => x.Count);
+                    .Sum(x => x.EndKeys.Length);
 
     Dictionary<PosCheat, int> RunMapping(
         PosCheat start,
@@ -108,27 +117,28 @@ int Day20a(string[] input)
                     continue;
                 }
 
-                // no more passing through walls
-                if ((( time > 0 || time >= maxTimeInCheat - 1) || !cheatsEnabled) && c != '.')
-                {
-                    continue;
-                }
-
                 bool isFree = c == '.';
                 var (newC1, newC2, newTime) = (cheat1, cheat2, time);
                 if (cheat1 != null)
                 {
                     newTime += 1;
                 }
-                else if (!isFree && map.ContainsKey(pos))
+                else if (!isFree)
                 {
-                    newC1 = neighbour;
+                    newC1 = pos;
                     newTime = 1;
                 }
 
-                if(newTime == maxTimeInCheat)
+                if(newTime == maxTimeInCheat || (newTime >= 1 && isFree))
                 {
                     newC2 = neighbour;
+                }
+
+                // no more passing through walls
+                var notInCheat = newC2 != null;
+                if ((notInCheat || !cheatsEnabled) && c != '.')
+                {
+                    continue;
                 }
 
                 var distFromSource = getDist(posCheat) + 1;
@@ -150,21 +160,21 @@ int Day20a(string[] input)
 
     /*
 0012345678901234
-1###############
-2#...#...#.....#
-3#.#.#.#.#.###.#
-4#S#...#.#.#...#
-5#######.#.#.###
-6#######.#.#...#
-7#######.#.###.#
-8###..E#...#...#
-9###.#######.###
-0#...###...#...#
-1#.#####.#.###.#
-2#.#...#.#.#...#
-3#.#.#.#.#.#.###
-4#...#...#...###
-5###############
+0###############
+1#...#...#.....#
+2#.#.#.#.#.###.#
+3#S#...#.#.#...#
+4#######.#.#.###
+5#######.#.#...#
+6#######.#.###.#
+7###..E#...#...#
+8###.#######.###
+9#...###...#...#
+10#.#####.#.###.#
+11#.#...#.#.#...#
+12#.#.#.#.#.#.###
+13#...#...#...###
+14###############
      */
 }
 
