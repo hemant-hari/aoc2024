@@ -6,40 +6,23 @@ using System.Text.RegularExpressions;
 using Pos = (int x, int y);
 
 FConsole.Initialize("test");
-var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day18.txt");
+var text = File.ReadAllText(@"C:\Users\Hemant Hari\source\repos\aoc2024\day19.txt");
 
-var testText = @"5,4
-4,2
-4,5
-3,0
-2,1
-6,3
-2,4
-1,5
-0,6
-3,3
-2,6
-5,1
-1,2
-5,5
-2,5
-6,5
-1,4
-0,4
-6,4
-1,1
-6,1
-1,0
-0,5
-1,6
-2,0".Split("\r\n");
+var testText = @"r, wr, b, g, bwu, rb, gb, br
 
-var input = (text, (70, 70), 1024);
-input = (testText, (6, 6), 12);
-input = (text, (70, 70), 3011);
+brwrr
+bggr
+gbbr
+rrbgbr
+ubwu
+bwurrg
+brgr
+bbrgwb".Replace("\r", "");
 
-Console.WriteLine(Day18(input));
 
+var input = text;
+
+Console.WriteLine(Day19(input));
 
 static IEnumerable<int> Hardcoded(BigInteger a)
 {
@@ -1610,4 +1593,54 @@ int Day18((string[] text, (int x, int y) endPos, int bytesToTake) input)
 
     return distMap[endPos];
 }
+
+(long, long) Day19(string input)
+{
+    var inputSplit = input.Split("\n\n");
+    var towels = inputSplit[0].Split(", ").Select(x => x.Trim()).ToHashSet();
+    var patterns = inputSplit[1].Split("\n").Select(x => x.Trim());
+
+    var solved = new Dictionary<string, long>();
+
+    long Solve(string pattern)
+    {
+        if (solved.TryGetValue(pattern, out var num))
+        {
+            return num;
+        }
+
+        if (pattern.Length == 0)
+        {
+            solved[pattern] = 1;
+            return 1;
+        }
+
+        long numSolutions = 0;
+        foreach (var towel in towels)
+        {
+            if (pattern.StartsWith(towel))
+            {
+                numSolutions += Solve(pattern[towel.Length..]);
+            }
+        }
+
+        solved[pattern] = numSolutions;
+        return numSolutions;
+    }
+
+    long resultA = 0;
+    long resultB = 0;
+    foreach (var pattern in patterns)
+    {
+        var numSolutions = Solve(pattern);
+        resultB += numSolutions;
+        if (numSolutions != 0)
+        {
+            resultA++;
+        }
+    }
+
+    return (resultA, resultB);
+}
+
 #endregion
