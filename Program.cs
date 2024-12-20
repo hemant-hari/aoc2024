@@ -4,25 +4,162 @@ using System.Drawing;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using Pos = (int x, int y);
+using PosCheat = ((int x, int y) pos, (int x, int y)? cheat1, (int x, int y)? cheat2);
 
 FConsole.Initialize("test");
-var text = File.ReadAllText(@"C:\Users\Hemant Hari\source\repos\aoc2024\day19.txt");
+var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day20.txt");
 
-var testText = @"r, wr, b, g, bwu, rb, gb, br
+var testText = @"###############
+#...#...#.....#
+#.#.#.#.#.###.#
+#S#...#.#.#...#
+#######.#.#.###
+#######.#.#...#
+#######.#.###.#
+###..E#...#...#
+###.#######.###
+#...###...#...#
+#.#####.#.###.#
+#.#...#.#.#...#
+#.#.#.#.#.#.###
+#...#...#...###
+###############".Split("\r\n");
 
-brwrr
-bggr
-gbbr
-rrbgbr
-ubwu
-bwurrg
-brgr
-bbrgwb".Replace("\r", "");
-
+var testText2 = """
+    #######
+    #...#.#
+    #S#...#
+    #####.#
+    ###..E#
+    #######
+    """.Split("\r\n");
 
 var input = text;
 
-Console.WriteLine(Day19(input));
+Console.WriteLine(Day20a(input));
+
+int Day20a(string[] input)
+{
+    PosCheat start = default;
+    Pos endPos = (-1, -1);
+    Dictionary<PosCheat, int> distMap = [];
+    int getDist(PosCheat pc) => distMap.GetValueOrDefault(pc, int.MaxValue);
+
+    Dictionary<Pos, char> map = [];
+    for (int i = 0; i < input.Length; i++)
+    {
+        for (int j = 0; j < input[i].Length; j++)
+        {
+            var x = input[i][j];
+            if (x == 'S')
+            {
+                start = ((x: j, y: i), null, null);
+                distMap[start] = 0;
+            }
+            else if (x == 'E')
+            {
+                endPos = (x: j, y: i);
+            }
+
+            map[(j, i)] = x;
+        }
+    }
+
+    map[start.Item1] = '.';
+    map[endPos] = '.';
+
+    //Dictionary<PosCheat, HashSet<PosCheat>> prevMap = [];
+    PriorityQueue<PosCheat, int> q = new();
+    q.Enqueue(start, 0);
+
+    while (q.TryDequeue(out var posCheat, out var dist))
+    {
+        var (pos, cheat1, cheat2) = posCheat;
+        ReadOnlySpan<Pos> neighbours = [
+            (pos.x, pos.y - 1),
+            (pos.x + 1, pos.y),
+            (pos.x - 1, pos.y),
+            (pos.x, pos.y + 1),
+        ];
+
+        foreach (var neighbour in neighbours)
+        {
+            if(!map.TryGetValue(neighbour, out var c))
+            {
+                continue;
+            }
+
+            // no more passing through walls
+            if (cheat1 != null && c != '.')
+            {
+                continue;
+            }
+
+            bool isFree = c == '.';
+            var (newC1, newC2) = (cheat1, cheat2);
+            if (cheat1 != null && cheat2 == null)
+            {
+                newC2 = neighbour;
+            }
+            else if (!isFree && map.ContainsKey(pos))
+            {
+                newC1 = neighbour;
+            }
+
+            var distFromPos = 1;
+            var distFromSource = getDist(posCheat) + distFromPos;
+            var neighbourCheat = (neighbour, newC1, newC2);
+            if (distFromSource < getDist(neighbourCheat))
+            {
+                q.Enqueue(neighbourCheat, 1);
+                //prevMap[neighbourCheat] = [(pos, newC1, newC2)];
+                distMap[neighbourCheat] = distFromSource;
+            }
+            else if (distFromSource <= distMap[neighbourCheat])
+            {
+                //prevMap[(neighbour, newC1, newC2)].Add((pos, newC1, newC2));
+            }
+        }
+    }
+
+    var noCheatTime =  distMap[(endPos, null, null)];
+
+    var allCheats = distMap.Keys
+        .Where(x => x.pos == endPos && x.cheat2 != null)
+        .Where(x => noCheatTime - distMap[x] > 0)
+        .GroupBy(x => noCheatTime - distMap[x])
+        .Select(x => (Saved: x.Key, Count: x.Count()));
+
+    /*
+    allCheats
+        .OrderBy(x => x.Saved)
+        .ToList()
+        .ForEach(x => Console.WriteLine(x));
+    */
+
+    return allCheats.Where(x => x.Saved >= 100)
+                    .Sum(x => x.Count);
+
+    /*
+0012345678901234
+1###############
+2#...#...#.....#
+3#.#.#.#.#.###.#
+4#S#...#.#.#...#
+5#######.#.#.###
+6#######.#.#...#
+7#######.#.###.#
+8###..E#...#...#
+9###.#######.###
+0#...###...#...#
+1#.#####.#.###.#
+2#.#...#.#.#...#
+3#.#.#.#.#.#.###
+4#...#...#...###
+5###############
+     */
+}
+
 
 static IEnumerable<int> Hardcoded(BigInteger a)
 {
