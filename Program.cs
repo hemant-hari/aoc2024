@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using Pos = (int x, int y);
-using PosCheat = ((int x, int y) pos, (int x, int y)? cheat1, (int x, int y)? cheat2);
+using PosCheat = ((int x, int y) pos, (int x, int y)? cheat1, (int x, int y)? cheat2, int cheatTime);
 
 FConsole.Initialize("test");
 var text = File.ReadAllLines(@"C:\Users\Hemant Hari\source\repos\aoc2024\day20.txt");
@@ -40,6 +40,7 @@ int Day20a(string[] input)
 {
     PosCheat start = default;
     Pos endPos = (-1, -1);
+    int maxTimeInCheat = 2;
 
     Dictionary<Pos, char> map = [];
     for (int i = 0; i < input.Length; i++)
@@ -49,7 +50,7 @@ int Day20a(string[] input)
             var x = input[i][j];
             if (x == 'S')
             {
-                start = ((x: j, y: i), null, null);
+                start = ((x: j, y: i), null, null, 0);
             }
             else if (x == 'E')
             {
@@ -63,7 +64,7 @@ int Day20a(string[] input)
     map[start.pos] = '.';
     map[endPos] = '.';
 
-    var noCheatMap = RunMapping((endPos, null, null), cheatsEnabled: false);
+    var noCheatMap = RunMapping((endPos, null, null, 0), cheatsEnabled: false);
 
     var noCheatTime = noCheatMap[start];
 
@@ -74,13 +75,6 @@ int Day20a(string[] input)
         .Where(x => noCheatTime - distMap[x] > 0)
         .GroupBy(x => noCheatTime - distMap[x])
         .Select(x => (Saved: x.Key, Count: x.Count()));
-
-    /*
-    allCheats
-        .OrderBy(x => x.Saved)
-        .ToList()
-        .ForEach(x => Console.WriteLine(x));
-    */
 
     return allCheats.Where(x => x.Saved >= 100)
                     .Sum(x => x.Count);
@@ -99,7 +93,7 @@ int Day20a(string[] input)
 
         while (q.TryDequeue(out var posCheat, out var dist))
         {
-            var (pos, cheat1, cheat2) = posCheat;
+            var (pos, cheat1, cheat2, time) = posCheat;
             ReadOnlySpan<Pos> neighbours = [
                 (pos.x, pos.y - 1),
                 (pos.x + 1, pos.y),
@@ -115,27 +109,33 @@ int Day20a(string[] input)
                 }
 
                 // no more passing through walls
-                if ((cheat1 != null || !cheatsEnabled) && c != '.')
+                if ((( time > 0 || time >= maxTimeInCheat - 1) || !cheatsEnabled) && c != '.')
                 {
                     continue;
                 }
 
                 bool isFree = c == '.';
-                var (newC1, newC2) = (cheat1, cheat2);
-                if (cheat1 != null && cheat2 == null)
+                var (newC1, newC2, newTime) = (cheat1, cheat2, time);
+                if (cheat1 != null)
                 {
-                    newC2 = neighbour;
+                    newTime += 1;
                 }
                 else if (!isFree && map.ContainsKey(pos))
                 {
                     newC1 = neighbour;
+                    newTime = 1;
+                }
+
+                if(newTime == maxTimeInCheat)
+                {
+                    newC2 = neighbour;
                 }
 
                 var distFromSource = getDist(posCheat) + 1;
-                var neighbourCheat = (neighbour, newC1, newC2);
-                if (newC2 != null && noCheatMap?.TryGetValue((neighbour, null, null), out var remainingDist) == true)
+                var neighbourCheat = (neighbour, newC1, newC2, newTime);
+                if (newC2 != null && noCheatMap?.TryGetValue((neighbour, null, null, 0), out var remainingDist) == true)
                 {
-                    distMap[(endPos, newC1, newC2)] = distFromSource + remainingDist;
+                    distMap[(endPos, newC1, newC2, newTime)] = distFromSource + remainingDist;
                 }
                 else if (distFromSource < getDist(neighbourCheat))
                 {
